@@ -22,6 +22,7 @@
             padding: 24px;
             overflow: hidden;
             position: relative;
+            padding-top: 60px;
         }
 
         /* --- Ambient Blue Glow Background Spots --- */
@@ -162,6 +163,111 @@
             stroke-linejoin: round;
             opacity: 0.85;
         }
+
+        /* --- Top Navigation Bar --- */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(13, 13, 16, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .nav-brand img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
+
+        .nav-auth-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 162, 255, 0.15);
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-auth-btn:hover {
+            background: rgba(0, 162, 255, 0.25);
+            box-shadow: 0 0 12px rgba(0, 162, 255, 0.2);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #00a2ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: none;
+            color: #8e8e99;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: left;
+            transition: color 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            color: #ff4d4d;
+        }
     </style>
 </head>
 <body>
@@ -199,7 +305,7 @@
                 Documentation
             </a>
             <a href="#" class="btn">
-                <svg viewBox="0 0 24 24"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3c3.2 1.5 6.8 1.5 10 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8a16 16 0 0 0 5-2.3A16.6 16.6 0 0 0 18 6zM8.5 14c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3a13.5 13.5 0 0 0 11.4 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8A16 16 0 0 0 21 16.5 16.6 16.6 0 0 0 18 6z"/></svg>
                 Discord
             </a>
         </div>
