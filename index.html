@@ -417,12 +417,10 @@
         // Dashboard authentication check
         function checkAuthAndGoDashboard(event) {
             event.preventDefault();
-            const accessToken = localStorage.getItem('discord_token');
-            const discordCode = localStorage.getItem('discord_code');
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
             
-            if (!accessToken && !discordCode) {
-                // Not logged in, redirect to index.html (login page)
-                window.location.href = 'index.html';
+            if (!isLoggedIn) {
+                // Not logged in, stay on index.html (user can see login button in navbar)
                 return;
             }
             
@@ -434,7 +432,7 @@
     <!-- Discord Auth Script -->
     <script>
         const DISCORD_CLIENT_ID = "1541512211220930630";
-        const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/dashboard.html";
+        const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/index.html";
 
         function initNavbarAuth() {
             const navAuthContainer = document.getElementById('navAuth');
@@ -445,37 +443,29 @@
             let authCode = params.get('code');
 
             if (authCode) {
-                // Store the code and redirect to dashboard
+                // User just authorized, store the code and mark as logged in
                 localStorage.setItem('discord_code', authCode);
-                window.location.href = 'dashboard.html';
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('discord_username', 'Discord User');
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                // Reload to show logged in state
+                window.location.reload();
                 return;
             }
 
-            // 2. Check if we have a stored token
-            let accessToken = localStorage.getItem('discord_token');
-
-            // 3. Render Login Button if no token exists
-            if (!accessToken) {
+            // 2. Check if user is already logged in
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!isLoggedIn) {
+                // Show login button
                 renderLoginButton(navAuthContainer);
                 return;
             }
 
-            // 4. Fetch user profile from Discord
-            fetch('https://discord.com/api/users/@me', {
-                headers: { authorization: `Bearer ${accessToken}` }
-            })
-            .then(res => res.json())
-            .then(user => {
-                if (user.message === "401: Unauthorized" || user.code === 0) {
-                    localStorage.removeItem('discord_token');
-                    renderLoginButton(navAuthContainer);
-                    return;
-                }
-                renderUserProfile(navAuthContainer, user);
-            })
-            .catch(() => {
-                renderLoginButton(navAuthContainer);
-            });
+            // 3. Show user profile if logged in
+            const username = localStorage.getItem('discord_username') || 'User';
+            renderUserProfile(navAuthContainer, username);
         }
 
         function renderLoginButton(container) {
@@ -489,15 +479,12 @@
             `;
         }
 
-        function renderUserProfile(container, user) {
-            const username = user.global_name || user.username;
-            const avatarHtml = user.avatar 
-                ? `<img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">`
-                : username.charAt(0).toUpperCase();
-
+        function renderUserProfile(container, username) {
+            const initial = username.charAt(0).toUpperCase();
+            
             container.innerHTML = `
                 <div class="user-profile">
-                    <div class="user-avatar">${avatarHtml}</div>
+                    <div class="user-avatar">${initial}</div>
                     <div class="user-info">
                         <span class="user-name">${username}</span>
                         <button class="logout-btn" onclick="logoutDiscord()">Logout</button>
@@ -507,8 +494,9 @@
         }
 
         function logoutDiscord() {
-            localStorage.removeItem('discord_token');
             localStorage.removeItem('discord_code');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('discord_username');
             window.location.reload();
         }
 

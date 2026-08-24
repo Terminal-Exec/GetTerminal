@@ -461,8 +461,8 @@
         <header class="header">
             <h1>Dashboard</h1>
             <div class="user-badge">
-                <div class="avatar">T</div>
-                <span style="font-size: 13px; font-weight: 500;">User_8921</span>
+                <div class="avatar" id="userAvatar">T</div>
+                <span style="font-size: 13px; font-weight: 500;" id="userDisplayName">User</span>
             </div>
         </header>
 
@@ -507,78 +507,37 @@
     <!-- Discord Authentication Script -->
     <script>
         const DISCORD_CLIENT_ID = "1541512211220930630";
-        const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/dashboard.html";
+        const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/index.html";
 
         function initNavbarAuth() {
             const navAuthContainer = document.getElementById('navAuth');
             if (!navAuthContainer) return;
 
             // Check if user is authenticated
-            const accessToken = localStorage.getItem('discord_token');
-            const discordCode = localStorage.getItem('discord_code');
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
             // If not authenticated, redirect to index.html
-            if (!accessToken && !discordCode) {
+            if (!isLoggedIn) {
                 window.location.href = 'index.html';
                 return;
             }
 
-            // 1. Check for authorization code in URL params
-            const params = new URLSearchParams(window.location.search);
-            let authCode = params.get('code');
-
-            if (authCode) {
-                // TODO: Exchange code for token with your backend server
-                // For now, store the code
-                localStorage.setItem('discord_code', authCode);
-                // Clean up URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
-            // 2. Render Login Button if no token exists
-            if (!accessToken) {
-                renderLoginButton(navAuthContainer);
-                return;
-            }
-
-            // 3. Fetch user profile from Discord
-            fetch('https://discord.com/api/users/@me', {
-                headers: { authorization: `Bearer ${accessToken}` }
-            })
-            .then(res => res.json())
-            .then(user => {
-                if (user.message === "401: Unauthorized" || user.code === 0) {
-                    localStorage.removeItem('discord_token');
-                    renderLoginButton(navAuthContainer);
-                    return;
-                }
-                renderUserProfile(navAuthContainer, user);
-            })
-            .catch(() => {
-                renderLoginButton(navAuthContainer);
-            });
+            // User is logged in, show profile
+            const username = localStorage.getItem('discord_username') || 'User';
+            renderUserProfile(navAuthContainer, username);
+            
+            // Update dashboard user badge
+            const initial = username.charAt(0).toUpperCase();
+            document.getElementById('userAvatar').textContent = initial;
+            document.getElementById('userDisplayName').textContent = username;
         }
 
-        function renderLoginButton(container) {
-            const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&scope=identify`;
+        function renderUserProfile(container, username) {
+            const initial = username.charAt(0).toUpperCase();
             
             container.innerHTML = `
-                <a href="${discordAuthUrl}" class="nav-auth-btn">
-                    <img src="DiscordLogo.png" alt="Discord Logo" style="width: 16px; height: 16px; object-fit: contain;">
-                    Login with Discord
-                </a>
-            `;
-        }
-
-        function renderUserProfile(container, user) {
-            const username = user.global_name || user.username;
-            const avatarHtml = user.avatar 
-                ? `<img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">`
-                : username.charAt(0).toUpperCase();
-
-            container.innerHTML = `
                 <div class="user-profile">
-                    <div class="user-avatar">${avatarHtml}</div>
+                    <div class="user-avatar">${initial}</div>
                     <div class="user-info">
                         <span class="user-name">${username}</span>
                         <button class="logout-btn" onclick="logoutDiscord()">Logout</button>
@@ -588,9 +547,10 @@
         }
 
         function logoutDiscord() {
-            localStorage.removeItem('discord_token');
             localStorage.removeItem('discord_code');
-            window.location.reload();
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('discord_username');
+            window.location.href = 'index.html';
         }
 
         document.addEventListener('DOMContentLoaded', initNavbarAuth);
