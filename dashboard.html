@@ -506,51 +506,87 @@
 
     <!-- Discord Authentication Script -->
     <script>
-        const DISCORD_CLIENT_ID = "1541512211220930630";
-        const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/index.html";
+    const DISCORD_CLIENT_ID = "1541512211220930630";
+    const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/dashboard.html";
 
-        function initNavbarAuth() {
-            const navAuthContainer = document.getElementById('navAuth');
-            if (!navAuthContainer) return;
+    function initNavbarAuth() {
+        const navAuthContainer = document.getElementById('navAuth');
 
-            // Check if user is authenticated
+        // Check if returning from Discord OAuth with token in URL (#access_token=...)
+        const fragment = new URLSearchParams(window.location.hash.slice(1));
+        let accessToken = fragment.get('access_token');
+
+        if (accessToken) {
+            // Fetch profile using token
+            fetch('https://discord.com/api/users/@me', {
+                headers: { authorization: `Bearer ${accessToken}` }
+            })
+            .then(res => res.json())
+            .then(user => {
+                if (user.id) {
+                    const username = user.global_name || user.username;
+                    const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '';
+                    
+                    localStorage.setItem('discord_token', accessToken);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('discord_username', username);
+                    localStorage.setItem('discord_avatar', avatarUrl);
+
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    updateUI(username, avatarUrl);
+                } else {
+                    redirectToLogin();
+                }
+            })
+            .catch(() => redirectToLogin());
+            return;
+        }
+
+        // Check stored login state
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-            // If not authenticated, redirect to index.html
             if (!isLoggedIn) {
-                window.location.href = 'index.html';
+                redirectToLogin();
                 return;
             }
 
-            // User is logged in, show profile
             const username = localStorage.getItem('discord_username') || 'User';
-            renderUserProfile(navAuthContainer, username);
-            
-            // Update dashboard user badge
-            const initial = username.charAt(0).toUpperCase();
-            document.getElementById('userAvatar').textContent = initial;
-            document.getElementById('userDisplayName').textContent = username;
+            const avatarUrl = localStorage.getItem('discord_avatar');
+            updateUI(username, avatarUrl);
         }
 
-        function renderUserProfile(container, username) {
-            const initial = username.charAt(0).toUpperCase();
-            
-            container.innerHTML = `
-                <div class="user-profile">
-                    <div class="user-avatar">${initial}</div>
-                    <div class="user-info">
-                        <span class="user-name">${username}</span>
-                        <button class="logout-btn" onclick="logoutDiscord()">Logout</button>
+        function updateUI(username, avatarUrl) {
+            const navAuthContainer = document.getElementById('navAuth');
+            const avatarContainer = document.getElementById('userAvatar');
+        
+            if (avatarUrl) {
+                avatarContainer.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            } else {
+                avatarContainer.textContent = username.charAt(0).toUpperCase();
+            }
+
+            document.getElementById('userDisplayName').textContent = username;
+
+            if (navAuthContainer) {
+                const avatarHtml = avatarUrl ? `<img src="${avatarUrl}">` : username.charAt(0).toUpperCase();
+                navAuthContainer.innerHTML = `
+                    <div class="user-profile">
+                        <div class="user-avatar">${avatarHtml}</div>
+                        <div class="user-info">
+                            <span class="user-name">${username}</span>
+                            <button class="logout-btn" onclick="logoutDiscord()">Logout</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
+        }
+
+        function redirectToLogin() {
+            window.location.href = 'login.html';
         }
 
         function logoutDiscord() {
-            localStorage.removeItem('discord_code');
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('discord_username');
-            window.location.href = 'index.html';
+            localStorage.clear();
+            window.location.href = 'login.html';
         }
 
         document.addEventListener('DOMContentLoaded', initNavbarAuth);
