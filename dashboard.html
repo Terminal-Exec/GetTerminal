@@ -424,7 +424,7 @@
 
         <ul class="nav-menu">
             <li>
-                <a href="#" class="nav-link active">
+                <a href="dashboard.html" class="nav-link active">
                     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     Dashboard
                 </a>
@@ -449,7 +449,7 @@
             </li>
             <li>
                 <a href="#" class="nav-link">
-                    <svg viewBox="0 0 24 24"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3a13.5 13.5 0 0 0 11.4 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8A16 16 0 0 0 21 16.5 16.6 16.6 0 0 0 18 6z"/></svg>
+                    <svg viewBox="0 0 24 24"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3a13.5 13.5 0 0 0 11.4 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8a16 16 0 0 0 5-2.3A16.6 16.6 0 0 0 18 6z"/></svg>
                     Discord
                 </a>
             </li>
@@ -502,6 +502,87 @@
             navigator.clipboard.writeText(keyText);
             alert("Key copied to clipboard!");
         }
+    </script>
+
+    <!-- Discord Authentication Script -->
+    <script>
+        const DISCORD_CLIENT_ID = "1541512211220930630";
+        // Uses the current page URL as redirect target dynamically
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+        function initNavbarAuth() {
+            const navAuthContainer = document.getElementById('navAuth');
+            if (!navAuthContainer) return;
+
+            // 1. Check for token in URL hash (#access_token=...)
+            const fragment = new URLSearchParams(window.location.hash.slice(1));
+            let accessToken = fragment.get('access_token');
+
+            if (accessToken) {
+                localStorage.setItem('discord_token', accessToken);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                accessToken = localStorage.getItem('discord_token');
+            }
+
+            // 2. Render Login Button if no token exists
+            if (!accessToken) {
+                renderLoginButton(navAuthContainer);
+                return;
+            }
+
+            // 3. Fetch user profile from Discord
+            fetch('https://discord.com/api/users/@me', {
+                headers: { authorization: `Bearer ${accessToken}` }
+            })
+            .then(res => res.json())
+            .then(user => {
+                if (user.message === "401: Unauthorized" || user.code === 0) {
+                    localStorage.removeItem('discord_token');
+                    renderLoginButton(navAuthContainer);
+                    return;
+                }
+                renderUserProfile(navAuthContainer, user);
+            })
+            .catch(() => {
+                renderLoginButton(navAuthContainer);
+            });
+        }
+
+        function renderLoginButton(container) {
+            const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
+            
+            container.innerHTML = `
+                <a href="${discordAuthUrl}" class="nav-auth-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3a13.5 13.5 0 0 0 11.4 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8a16 16 0 0 0 5-2.3A16.6 16.6 0 0 0 18 6zM8.5 14c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg>
+                    Login with Discord
+                </a>
+            `;
+        }
+
+        function renderUserProfile(container, user) {
+            const username = user.global_name || user.username;
+            const avatarHtml = user.avatar 
+                ? `<img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">`
+                : username.charAt(0).toUpperCase();
+
+            container.innerHTML = `
+                <div class="user-profile">
+                    <div class="user-avatar">${avatarHtml}</div>
+                    <div class="user-info">
+                        <span class="user-name">${username}</span>
+                        <button class="logout-btn" onclick="logoutDiscord()">Logout</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function logoutDiscord() {
+            localStorage.removeItem('discord_token');
+            window.location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', initNavbarAuth);
     </script>
 </body>
 </html>
