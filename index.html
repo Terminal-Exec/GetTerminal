@@ -330,147 +330,72 @@
 
     <!-- Background Grid Script -->
     <script>
-        const canvas = document.getElementById('dotCanvas');
-        const ctx = canvas.getContext('2d');
+    const DISCORD_CLIENT_ID = "1541512211220930630";
+    const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/dashboard.html";
 
-        let dots = [];
-        let mouse = { x: -1000, y: -1000 };
+    // Fix: Redirect to login.html if not authenticated
+    function checkAuthAndGoDashboard(event) {
+        event.preventDefault();
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         
-        const spacing = 35;
-        const baseRadius = 2;
-        const maxRadius = 5.5;
-        const interactionRadius = 130;
+        if (!isLoggedIn) {
+            window.location.href = 'login.html';
+            return;
+        }
         
-        const colorStart = [28, 28, 28];   // #1c1c1c
-        const colorEnd = [171, 171, 171];  // #ababab
+        window.location.href = 'dashboard.html';
+    }
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initDots();
-        }
+    function initNavbarAuth() {
+        const navAuthContainer = document.getElementById('navAuth');
+        if (!navAuthContainer) return;
 
-        function initDots() {
-            dots = [];
-            const cols = Math.floor(canvas.width / spacing);
-            const rows = Math.floor(canvas.height / spacing);
-            
-            const offsetX = (canvas.width - cols * spacing) / 2;
-            const offsetY = (canvas.height - rows * spacing) / 2;
+        // Check for implicit token in URL hash fragment
+            const fragment = new URLSearchParams(window.location.hash.slice(1));
+            let accessToken = fragment.get('access_token');
 
-            for (let i = 0; i <= cols; i++) {
-                for (let j = 0; j <= rows; j++) {
-                    dots.push({
-                        x: offsetX + i * spacing,
-                        y: offsetY + j * spacing,
-                        radius: baseRadius
-                    });
-                }
-            }
-        }
-
-        window.addEventListener('resize', resize);
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-        window.addEventListener('mouseleave', () => {
-            mouse.x = -1000;
-            mouse.y = -1000;
-        });
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            dots.forEach(dot => {
-                const dx = mouse.x - dot.x;
-                const dy = mouse.y - dot.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                let scaleFactor = 0;
-                if (distance < interactionRadius) {
-                    scaleFactor = 1 - (distance / interactionRadius);
-                }
-
-                const targetRadius = baseRadius + (maxRadius - baseRadius) * scaleFactor;
-                dot.radius += (targetRadius - dot.radius) * 0.15; 
-
-                const currentRatio = (dot.radius - baseRadius) / (maxRadius - baseRadius);
-                const clampedRatio = Math.max(0, Math.min(1, currentRatio));
-                
-                const currentR = Math.round(colorStart[0] + (colorEnd[0] - colorStart[0]) * clampedRatio);
-                const currentG = Math.round(colorStart[1] + (colorEnd[1] - colorStart[1]) * clampedRatio);
-                const currentB = Math.round(colorStart[2] + (colorEnd[2] - colorStart[2]) * clampedRatio);
-
-                ctx.beginPath();
-                ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgb(${currentR}, ${currentG}, ${currentB})`;
-                ctx.fill();
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        resize();
-        animate();
-
-        // Dashboard authentication check
-        function checkAuthAndGoDashboard(event) {
-            event.preventDefault();
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            
-            if (!isLoggedIn) {
-                // Not logged in, stay on index.html (user can see login button in navbar)
-                return;
-            }
-            
-            // Logged in, proceed to dashboard
-            window.location.href = 'dashboard.html';
-        }
-    </script>
-
-    <!-- Discord Auth Script -->
-    <script>
-        const DISCORD_CLIENT_ID = "1541512211220930630";
-        const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/index.html";
-
-        function initNavbarAuth() {
-            const navAuthContainer = document.getElementById('navAuth');
-            if (!navAuthContainer) return;
-
-            // 1. Check for authorization code in URL params
-            const params = new URLSearchParams(window.location.search);
-            let authCode = params.get('code');
-
-            if (authCode) {
-                // User just authorized, store the code and mark as logged in
-                localStorage.setItem('discord_code', authCode);
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('discord_username', 'Discord User');
-                // Clean up URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-                // Reload to show logged in state
-                window.location.reload();
+            if (accessToken) {
+                fetchDiscordUser(accessToken, navAuthContainer);
                 return;
             }
 
-            // 2. Check if user is already logged in
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            
-            if (!isLoggedIn) {
-                // Show login button
+            const storedToken = localStorage.getItem('discord_token');
+            if (storedToken && localStorage.getItem('isLoggedIn') === 'true') {
+                const username = localStorage.getItem('discord_username') || 'User';
+                const avatar = localStorage.getItem('discord_avatar');
+                renderUserProfile(navAuthContainer, username, avatar);
+            } else {
                 renderLoginButton(navAuthContainer);
-                return;
             }
+        }
 
-            // 3. Show user profile if logged in
-            const username = localStorage.getItem('discord_username') || 'User';
-            renderUserProfile(navAuthContainer, username);
+        function fetchDiscordUser(token, container) {
+            fetch('https://discord.com/api/users/@me', {
+                headers: { authorization: `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(user => {
+                if (user.id) {
+                    const username = user.global_name || user.username;
+                    const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '';
+                
+                    localStorage.setItem('discord_token', token);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('discord_username', username);
+                    localStorage.setItem('discord_avatar', avatarUrl);
+
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    renderUserProfile(container, username, avatarUrl);
+                } else {
+                    logoutDiscord();
+                }
+            })
+            .catch(() => logoutDiscord());
         }
 
         function renderLoginButton(container) {
-            const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&scope=identify`;
-            
+            const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=token&scope=identify`;
+        
             container.innerHTML = `
                 <a href="${discordAuthUrl}" class="nav-auth-btn">
                     <img src="DiscordLogo.png" alt="Discord Logo" style="width: 16px; height: 16px; object-fit: contain;">
@@ -479,12 +404,14 @@
             `;
         }
 
-        function renderUserProfile(container, username) {
-            const initial = username.charAt(0).toUpperCase();
-            
+        function renderUserProfile(container, username, avatarUrl) {
+            const avatarHtml = avatarUrl 
+                ? `<img src="${avatarUrl}" alt="Avatar">`
+                : username.charAt(0).toUpperCase();
+
             container.innerHTML = `
-                <div class="user-profile">
-                    <div class="user-avatar">${initial}</div>
+                  <div class="user-profile">
+                    <div class="user-avatar">${avatarHtml}</div>
                     <div class="user-info">
                         <span class="user-name">${username}</span>
                         <button class="logout-btn" onclick="logoutDiscord()">Logout</button>
@@ -494,9 +421,7 @@
         }
 
         function logoutDiscord() {
-            localStorage.removeItem('discord_code');
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('discord_username');
+            localStorage.clear();
             window.location.reload();
         }
 
