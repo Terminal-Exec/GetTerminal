@@ -108,7 +108,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 24px;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .nav-brand {
@@ -268,6 +268,12 @@
             stroke-linejoin: round;
             opacity: 0.85;
         }
+
+        .btn img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -316,7 +322,7 @@
                 Documentation
             </a>
             <a href="#" class="btn">
-                <svg viewBox="0 0 24 24"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3a13.5 13.5 0 0 0 11.4 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8A16 16 0 0 0 21 16.5 16.6 16.6 0 0 0 18 6z"/></svg>
+                <img src="DiscordLogo.png" alt="Discord Logo">
                 Discord
             </a>
         </div>
@@ -459,7 +465,7 @@
             
             container.innerHTML = `
                 <a href="${discordAuthUrl}" class="nav-auth-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3a13.5 13.5 0 0 0 11.4 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8a16 16 0 0 0 5-2.3A16.6 16.6 0 0 0 18 6zM8.5 14c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg>
+                    <img src="DiscordLogo.png" alt="Discord Logo" style="width: 16px; height: 16px; object-fit: contain;">
                     Login with Discord
                 </a>
             `;
