@@ -63,7 +63,6 @@
             animation: floatGlow3 15s ease-in-out infinite alternate;
         }
 
-        /* Ambient Movement Keyframes */
         @keyframes floatGlow1 {
             0% { transform: translate(0, 0) scale(1); }
             50% { transform: translate(120px, 80px) scale(1.15); }
@@ -82,7 +81,7 @@
             100% { transform: translate(-60%, -40%) scale(0.85); }
         }
 
-        /* Interactive Canvas Overlay */
+        /* --- Interactive Canvas Overlay --- */
         #dotCanvas {
             position: fixed;
             top: 0;
@@ -198,7 +197,7 @@
             color: #ff4d4d;
         }
 
-        /* Main UI Container */
+        /* --- Main UI Container --- */
         .main-container {
             position: relative;
             z-index: 10;
@@ -328,29 +327,113 @@
         </div>
     </div>
 
-    <!-- Background Grid Script -->
+    <!-- Background Dot Canvas & Discord Auth Script -->
     <script>
-    const DISCORD_CLIENT_ID = "1541512211220930630";
-    const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/dashboard.html";
+        // --- 1. Interactive Canvas Dot Grid ---
+        const canvas = document.getElementById('dotCanvas');
+        const ctx = canvas.getContext('2d');
 
-    // Fix: Redirect to login.html if not authenticated
-    function checkAuthAndGoDashboard(event) {
-        event.preventDefault();
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        let dots = [];
+        let mouse = { x: -1000, y: -1000 };
         
-        if (!isLoggedIn) {
-            window.location.href = 'login.html';
-            return;
+        const spacing = 35;
+        const baseRadius = 2;
+        const maxRadius = 5.5;
+        const interactionRadius = 130;
+        
+        const colorStart = [28, 28, 28];   // #1c1c1c
+        const colorEnd = [171, 171, 171];  // #ababab
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initDots();
         }
-        
-        window.location.href = 'dashboard.html';
-    }
 
-    function initNavbarAuth() {
-        const navAuthContainer = document.getElementById('navAuth');
-        if (!navAuthContainer) return;
+        function initDots() {
+            dots = [];
+            const cols = Math.floor(canvas.width / spacing);
+            const rows = Math.floor(canvas.height / spacing);
+            
+            const offsetX = (canvas.width - cols * spacing) / 2;
+            const offsetY = (canvas.height - rows * spacing) / 2;
 
-        // Check for implicit token in URL hash fragment
+            for (let i = 0; i <= cols; i++) {
+                for (let j = 0; j <= rows; j++) {
+                    dots.push({
+                        x: offsetX + i * spacing,
+                        y: offsetY + j * spacing,
+                        radius: baseRadius
+                    });
+                }
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mouseleave', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            dots.forEach(dot => {
+                const dx = mouse.x - dot.x;
+                const dy = mouse.y - dot.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                let scaleFactor = 0;
+                if (distance < interactionRadius) {
+                    scaleFactor = 1 - (distance / interactionRadius);
+                }
+
+                const targetRadius = baseRadius + (maxRadius - baseRadius) * scaleFactor;
+                dot.radius += (targetRadius - dot.radius) * 0.15; 
+
+                const currentRatio = (dot.radius - baseRadius) / (maxRadius - baseRadius);
+                const clampedRatio = Math.max(0, Math.min(1, currentRatio));
+                
+                const currentR = Math.round(colorStart[0] + (colorEnd[0] - colorStart[0]) * clampedRatio);
+                const currentG = Math.round(colorStart[1] + (colorEnd[1] - colorStart[1]) * clampedRatio);
+                const currentB = Math.round(colorStart[2] + (colorEnd[2] - colorStart[2]) * clampedRatio);
+
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgb(${currentR}, ${currentG}, ${currentB})`;
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        resize();
+        animate();
+
+        // --- 2. Discord Authentication & Navigation Logic ---
+        const DISCORD_CLIENT_ID = "1541512211220930630";
+        const DISCORD_REDIRECT_URI = "https://terminal-exec.github.io/GetTerminal/dashboard.html";
+
+        function checkAuthAndGoDashboard(event) {
+            event.preventDefault();
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            window.location.href = 'dashboard.html';
+        }
+
+        function initNavbarAuth() {
+            const navAuthContainer = document.getElementById('navAuth');
+            if (!navAuthContainer) return;
+
             const fragment = new URLSearchParams(window.location.hash.slice(1));
             let accessToken = fragment.get('access_token');
 
@@ -378,7 +461,7 @@
                 if (user.id) {
                     const username = user.global_name || user.username;
                     const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '';
-                
+                    
                     localStorage.setItem('discord_token', token);
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('discord_username', username);
@@ -395,7 +478,7 @@
 
         function renderLoginButton(container) {
             const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=token&scope=identify`;
-        
+            
             container.innerHTML = `
                 <a href="${discordAuthUrl}" class="nav-auth-btn">
                     <img src="DiscordLogo.png" alt="Discord Logo" style="width: 16px; height: 16px; object-fit: contain;">
@@ -410,7 +493,7 @@
                 : username.charAt(0).toUpperCase();
 
             container.innerHTML = `
-                  <div class="user-profile">
+                <div class="user-profile">
                     <div class="user-avatar">${avatarHtml}</div>
                     <div class="user-info">
                         <span class="user-name">${username}</span>
