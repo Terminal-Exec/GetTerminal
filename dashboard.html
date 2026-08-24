@@ -513,6 +513,16 @@
             const navAuthContainer = document.getElementById('navAuth');
             if (!navAuthContainer) return;
 
+            // Check if user is authenticated
+            const accessToken = localStorage.getItem('discord_token');
+            const discordCode = localStorage.getItem('discord_code');
+
+            // If not authenticated, redirect to index.html
+            if (!accessToken && !discordCode) {
+                window.location.href = 'index.html';
+                return;
+            }
+
             // 1. Check for authorization code in URL params
             const params = new URLSearchParams(window.location.search);
             let authCode = params.get('code');
@@ -525,16 +535,13 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
-            // 2. Check if we have a stored token
-            let accessToken = localStorage.getItem('discord_token');
-
-            // 3. Render Login Button if no token exists
+            // 2. Render Login Button if no token exists
             if (!accessToken) {
                 renderLoginButton(navAuthContainer);
                 return;
             }
 
-            // 4. Fetch user profile from Discord
+            // 3. Fetch user profile from Discord
             fetch('https://discord.com/api/users/@me', {
                 headers: { authorization: `Bearer ${accessToken}` }
             })

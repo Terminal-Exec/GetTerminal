@@ -313,7 +313,7 @@
                 <svg viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M21 2l-9.6 9.6M15.5 7.5l3 3"/></svg>
                 Get Key
             </a>
-            <a href="dashboard.html" class="btn">
+            <a href="#" class="btn" id="dashboardBtn" onclick="checkAuthAndGoDashboard(event)">
                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Dashboard
             </a>
@@ -413,6 +413,22 @@
 
         resize();
         animate();
+
+        // Dashboard authentication check
+        function checkAuthAndGoDashboard(event) {
+            event.preventDefault();
+            const accessToken = localStorage.getItem('discord_token');
+            const discordCode = localStorage.getItem('discord_code');
+            
+            if (!accessToken && !discordCode) {
+                // Not logged in, redirect to index.html (login page)
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Logged in, proceed to dashboard
+            window.location.href = 'dashboard.html';
+        }
     </script>
 
     <!-- Discord Auth Script -->
