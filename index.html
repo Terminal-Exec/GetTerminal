@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0d0d10;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Ambient Blue Glow Background Spots --- */
+        .glow-spot {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(140px);
+            will-change: transform;
+        }
+
+        .glow-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 162, 255, 0.09) 0%, rgba(0, 162, 255, 0) 70%);
+            top: -150px;
+            left: -150px;
+            animation: floatGlow1 18s ease-in-out infinite alternate;
+        }
+
+        .glow-2 {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0, 102, 255, 0.07) 0%, rgba(0, 102, 255, 0) 70%);
+            bottom: -200px;
+            right: -150px;
+            animation: floatGlow2 22s ease-in-out infinite alternate;
+        }
+
+        .glow-3 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0, 217, 255, 0.06) 0%, rgba(0, 217, 255, 0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: floatGlow3 15s ease-in-out infinite alternate;
+        }
+
+        /* Ambient Movement Keyframes */
+        @keyframes floatGlow1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(120px, 80px) scale(1.15); }
+            100% { transform: translate(-60px, 140px) scale(0.95); }
+        }
+
+        @keyframes floatGlow2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-140px, -90px) scale(1.1); }
+            100% { transform: translate(80px, -120px) scale(0.9); }
+        }
+
+        @keyframes floatGlow3 {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-40%, -60%) scale(1.2); }
+            100% { transform: translate(-60%, -40%) scale(0.85); }
+        }
+
+        /* Interactive Canvas Overlay */
+        #dotCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Main UI Container */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .logo-container img {
+            width: 130px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 25px rgba(0, 162, 255, 0.35));
+            transition: transform 0.3s ease;
+        }
+
+        .logo-container img:hover {
+            transform: scale(1.03);
+        }
+
+        .button-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 13px 20px;
+            background: rgba(24, 24, 28, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            color: #e2e2e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .btn:hover {
+            background: rgba(33, 33, 40, 0.9);
+            border-color: rgba(0, 162, 255, 0.4);
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(0, 162, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.85;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Floating Blue Glow Layers -->
+    <div class="glow-spot glow-1"></div>
+    <div class="glow-spot glow-2"></div>
+    <div class="glow-spot glow-3"></div>
+
+    <!-- Interactive Grid Canvas -->
+    <canvas id="dotCanvas"></canvas>
+
+    <div class="main-container">
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <img src="logo.png" alt="Terminal Logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/130x130/0d0d10/00a2ff?text=Terminal';">
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="button-list">
+            <a href="#" class="btn">
+                <svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+                Terminal Products
+            </a>
+            <a href="#" class="btn">
+                <svg viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M21 2l-9.6 9.6M15.5 7.5l3 3"/></svg>
+                Get Key
+            </a>
+            <a href="#" class="btn">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Dashboard
+            </a>
+            <a href="#" class="btn">
+                <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Documentation
+            </a>
+            <a href="#" class="btn">
+                <svg viewBox="0 0 24 24"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3c3.2 1.5 6.8 1.5 10 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8a16 16 0 0 0 5-2.3A16.6 16.6 0 0 0 18 6zM8.5 14c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg>
+                Discord
+            </a>
+        </div>
+    </div>
+
+    <!-- Background Grid Script -->
+    <script>
+        const canvas = document.getElementById('dotCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let dots = [];
+        let mouse = { x: -1000, y: -1000 };
+        
+        const spacing = 35;
+        const baseRadius = 2;
+        const maxRadius = 5.5;
+        const interactionRadius = 130;
+        
+        const colorStart = [28, 28, 28];   // #1c1c1c
+        const colorEnd = [171, 171, 171];  // #ababab
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initDots();
+        }
+
+        function initDots() {
+            dots = [];
+            const cols = Math.floor(canvas.width / spacing);
+            const rows = Math.floor(canvas.height / spacing);
+            
+            const offsetX = (canvas.width - cols * spacing) / 2;
+            const offsetY = (canvas.height - rows * spacing) / 2;
+
+            for (let i = 0; i <= cols; i++) {
+                for (let j = 0; j <= rows; j++) {
+                    dots.push({
+                        x: offsetX + i * spacing,
+                        y: offsetY + j * spacing,
+                        radius: baseRadius
+                    });
+                }
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mouseleave', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            dots.forEach(dot => {
+                const dx = mouse.x - dot.x;
+                const dy = mouse.y - dot.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                let scaleFactor = 0;
+                if (distance < interactionRadius) {
+                    scaleFactor = 1 - (distance / interactionRadius);
+                }
+
+                const targetRadius = baseRadius + (maxRadius - baseRadius) * scaleFactor;
+                dot.radius += (targetRadius - dot.radius) * 0.15; 
+
+                const currentRatio = (dot.radius - baseRadius) / (maxRadius - baseRadius);
+                const clampedRatio = Math.max(0, Math.min(1, currentRatio));
+                
+                const currentR = Math.round(colorStart[0] + (colorEnd[0] - colorStart[0]) * clampedRatio);
+                const currentG = Math.round(colorStart[1] + (colorEnd[1] - colorStart[1]) * clampedRatio);
+                const currentB = Math.round(colorStart[2] + (colorEnd[2] - colorStart[2]) * clampedRatio);
+
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgb(${currentR}, ${currentG}, ${currentB})`;
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        resize();
+        animate();
+    </script>
+</body>
+</html>
