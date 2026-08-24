@@ -93,77 +93,6 @@
             pointer-events: none;
         }
 
-        /* Main UI Container */
-        .main-container {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 32px;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        .logo-container img {
-            width: 130px;
-            height: auto;
-            object-fit: contain;
-            filter: drop-shadow(0 0 25px rgba(0, 162, 255, 0.35));
-            transition: transform 0.3s ease;
-        }
-
-        .logo-container img:hover {
-            transform: scale(1.03);
-        }
-
-        .button-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: 100%;
-        }
-
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 13px 20px;
-            background: rgba(24, 24, 28, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 9999px;
-            color: #e2e2e8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 0.2px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-
-        .btn:hover {
-            background: rgba(33, 33, 40, 0.9);
-            border-color: rgba(0, 162, 255, 0.4);
-            color: #ffffff;
-            box-shadow: 0 0 20px rgba(0, 162, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .btn svg {
-            width: 16px;
-            height: 16px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            opacity: 0.85;
-        }
-
         /* --- Top Navigation Bar --- */
         .top-navbar {
             position: fixed;
@@ -268,9 +197,91 @@
         .logout-btn:hover {
             color: #ff4d4d;
         }
+
+        /* Main UI Container */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .logo-container img {
+            width: 130px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 25px rgba(0, 162, 255, 0.35));
+            transition: transform 0.3s ease;
+        }
+
+        .logo-container img:hover {
+            transform: scale(1.03);
+        }
+
+        .button-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 13px 20px;
+            background: rgba(24, 24, 28, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            color: #e2e2e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .btn:hover {
+            background: rgba(33, 33, 40, 0.9);
+            border-color: rgba(0, 162, 255, 0.4);
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(0, 162, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.85;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="top-navbar">
+        <a href="index.html" class="nav-brand">
+            <img src="logo.png" alt="Terminal Logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/28/0d0d10/00a2ff?text=T';">
+            <span>Terminal</span>
+        </a>
+
+        <!-- Dynamic Auth Container -->
+        <div id="navAuth"></div>
+    </nav>
 
     <!-- Ambient Floating Blue Glow Layers -->
     <div class="glow-spot glow-1"></div>
@@ -396,6 +407,87 @@
 
         resize();
         animate();
+    </script>
+
+    <!-- Discord Auth Script -->
+    <script>
+        const DISCORD_CLIENT_ID = "1541512211220930630";
+        // Uses the current page URL as redirect target dynamically
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+        function initNavbarAuth() {
+            const navAuthContainer = document.getElementById('navAuth');
+            if (!navAuthContainer) return;
+
+            // 1. Check for token in URL hash (#access_token=...)
+            const fragment = new URLSearchParams(window.location.hash.slice(1));
+            let accessToken = fragment.get('access_token');
+
+            if (accessToken) {
+                localStorage.setItem('discord_token', accessToken);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                accessToken = localStorage.getItem('discord_token');
+            }
+
+            // 2. Render Login Button if no token exists
+            if (!accessToken) {
+                renderLoginButton(navAuthContainer);
+                return;
+            }
+
+            // 3. Fetch user profile from Discord
+            fetch('https://discord.com/api/users/@me', {
+                headers: { authorization: `Bearer ${accessToken}` }
+            })
+            .then(res => res.json())
+            .then(user => {
+                if (user.message === "401: Unauthorized" || user.code === 0) {
+                    localStorage.removeItem('discord_token');
+                    renderLoginButton(navAuthContainer);
+                    return;
+                }
+                renderUserProfile(navAuthContainer, user);
+            })
+            .catch(() => {
+                renderLoginButton(navAuthContainer);
+            });
+        }
+
+        function renderLoginButton(container) {
+            const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
+            
+            container.innerHTML = `
+                <a href="${discordAuthUrl}" class="nav-auth-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3a13.5 13.5 0 0 0 11.4 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8a16 16 0 0 0 5-2.3A16.6 16.6 0 0 0 18 6zM8.5 14c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg>
+                    Login with Discord
+                </a>
+            `;
+        }
+
+        function renderUserProfile(container, user) {
+            const username = user.global_name || user.username;
+            const avatarHtml = user.avatar 
+                ? `<img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">`
+                : username.charAt(0).toUpperCase();
+
+            container.innerHTML = `
+                <div class="user-profile">
+                    <div class="user-avatar">${avatarHtml}</div>
+                    <div class="user-info">
+                        <span class="user-name">${username}</span>
+                        <button class="logout-btn" onclick="logoutDiscord()">Logout</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function logoutDiscord() {
+            localStorage.removeItem('discord_token');
+            window.location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', initNavbarAuth);
     </script>
 </body>
 </html>
