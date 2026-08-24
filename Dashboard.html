@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal - Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0d0d10;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- Ambient Blue Glow Background --- */
+        .glow-spot {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(140px);
+            will-change: transform;
+        }
+
+        .glow-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 162, 255, 0.08) 0%, rgba(0, 162, 255, 0) 70%);
+            top: -150px;
+            left: -150px;
+            animation: floatGlow1 18s ease-in-out infinite alternate;
+        }
+
+        .glow-2 {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0, 102, 255, 0.06) 0%, rgba(0, 102, 255, 0) 70%);
+            bottom: -200px;
+            right: -150px;
+            animation: floatGlow2 22s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatGlow1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(120px, 80px) scale(1.15); }
+            100% { transform: translate(-60px, 140px) scale(0.95); }
+        }
+
+        @keyframes floatGlow2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-140px, -90px) scale(1.1); }
+            100% { transform: translate(80px, -120px) scale(0.9); }
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 250px;
+            background: rgba(18, 18, 22, 0.7);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            z-index: 10;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 8px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .sidebar-brand img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(0, 162, 255, 0.4));
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            list-style: none;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: #a0a0ab;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link.active {
+            background: rgba(0, 162, 255, 0.12);
+            border: 1px solid rgba(0, 162, 255, 0.25);
+            color: #00a2ff;
+        }
+
+        .nav-link svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex: 1;
+            padding: 32px 40px;
+            z-index: 10;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(24, 24, 28, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 14px 6px 6px;
+            border-radius: 9999px;
+            backdrop-filter: blur(12px);
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00a2ff, #0055ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* --- Stats Grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(24, 24, 28, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-title {
+            color: #8e8e99;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        /* --- Main Dashboard Panel --- */
+        .panel {
+            background: rgba(24, 24, 28, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            margin-bottom: 24px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* --- Key Box Component --- */
+        .key-box {
+            display: flex;
+            gap: 12px;
+            background: rgba(13, 13, 16, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 8px 8px 8px 16px;
+            align-items: center;
+        }
+
+        .key-value {
+            font-family: monospace;
+            color: #a0a0ab;
+            letter-spacing: 1px;
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .btn-action {
+            background: rgba(0, 162, 255, 0.15);
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            color: #00a2ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: rgba(0, 162, 255, 0.25);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(0, 162, 255, 0.2);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main-content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Floating Blue Glow Layers -->
+    <div class="glow-spot glow-1"></div>
+    <div class="glow-spot glow-2"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <a href="index.html" class="sidebar-brand">
+            <img src="logo.png" alt="Terminal Logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/32/0d0d10/00a2ff?text=T';">
+            <span>Terminal</span>
+        </a>
+
+        <ul class="nav-menu">
+            <li>
+                <a href="#" class="nav-link active">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+                    Terminal Products
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <svg viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M21 2l-9.6 9.6M15.5 7.5l3 3"/></svg>
+                    Get Key
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    Documentation
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <svg viewBox="0 0 24 24"><path d="M18 6h0a16 16 0 0 0-4.1-1.3l-.2.4a15 15 0 0 0-3.4 0l-.2-.4A16 16 0 0 0 6 6a16.6 16.6 0 0 0-3 10.5A16 16 0 0 0 8 18.8l.6-.8a10.6 10.6 0 0 1-1.7-.8l.4-.3c3.2 1.5 6.8 1.5 10 0l.4.3a10.6 10.6 0 0 1-1.7.8l.6.8a16 16 0 0 0 5-2.3A16.6 16.6 0 0 0 18 6zM8.5 14c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm7 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg>
+                    Discord
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <header class="header">
+            <h1>Dashboard</h1>
+            <div class="user-badge">
+                <div class="avatar">T</div>
+                <span style="font-size: 13px; font-weight: 500;">User_8921</span>
+            </div>
+        </header>
+
+        <!-- Top Overview Stats -->
+        <div class="stats-grid">
+            <div class="card">
+                <div class="card-title">Key Status</div>
+                <div class="card-value">
+                    <span class="status-dot"></span> Active
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Time Remaining</div>
+                <div class="card-value">23h 42m</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Current Version</div>
+                <div class="card-value">v2.4.1</div>
+            </div>
+        </div>
+
+        <!-- Active License Key Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Active License Key</h2>
+            </div>
+            <div class="key-box">
+                <span class="key-value" id="licenseKey">TRM-89A1-992F-XXXX</span>
+                <button class="btn-action" onclick="copyKey()">Copy Key</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function copyKey() {
+            const keyText = document.getElementById("licenseKey").innerText;
+            navigator.clipboard.writeText(keyText);
+            alert("Key copied to clipboard!");
+        }
+    </script>
+</body>
+</html>
